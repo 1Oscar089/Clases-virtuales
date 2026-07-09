@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Filogenético: Matrices, Grupos Externos y Dendrogramas</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #1a5276;
+            --highlight: #d4ac0d;
+            --bg-color: #fdfdfd;
+            --text-color: #34495e;
+            --border-color: #d5dbdb;
+            --table-header: #eaf2f8;
+            --zero-color: #7f8c8d;
+            --one-color: #c0392b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.8;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+
+        /* Header Académico */
+        header {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 3rem 2rem;
+            text-align: center;
+            border-bottom: 4px solid var(--highlight);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: normal;
+        }
+
+        header p {
+            font-family: 'Helvetica', sans-serif;
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        /* Contenido Principal */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        section {
+            margin-bottom: 4rem;
+            padding-bottom: 3rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        section:last-child {
+            border-bottom: none;
+        }
+
+        h2 {
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            font-weight: normal;
+            border-bottom: 2px solid var(--table-header);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        strong {
+            color: var(--primary-color);
+        }
+
+        .definition {
+            background-color: var(--table-header);
+            border-left: 4px solid var(--accent-color);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+        }
+
+        /* Estilos para la Matriz Binaria */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Courier New', Courier, monospace; /* Tipo consola para datos */
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.8rem 1rem;
+        }
+
+        th {
+            background-color: var(--table-header);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        td.taxon {
+            text-align: left;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+        }
+
+        .zero { color: var(--zero-color); }
+        .one { color: var(--one-color); font-weight: bold; }
+
+        /* Estilos para Grupo Externo (SVG/CSS) */
+        .diagram-container {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .outgroup-diagram {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: 'Helvetica', sans-serif;
+        }
+
+        .box {
+            padding: 15px 25px;
+            border: 2px solid;
+            border-radius: 5px;
+            text-align: center;
+            background: #fff;
+        }
+
+        .box.ingroup {
+            border-color: var(--accent-color);
+        }
+
+        .box.outgroup {
+            border-color: var(--highlight);
+            border-style: dashed;
+        }
+
+        .arrow {
+            font-size: 1.5rem;
+            color: var(--text-color);
+        }
+
+        /* Estilos para el Dendrograma (SVG) */
+        .dendrogram-svg {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+
+        .branch {
+            stroke: var(--primary-color);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .node-circle {
+            fill: #fff;
+            stroke: var(--accent-color);
+            stroke-width: 2;
+        }
+
+        .label-text {
+            font-family: 'Helvetica', sans-serif;
+            font-size: 14px;
+            fill: var(--text-color);
+        }
+
+        .scientific-name {
+            font-style: italic;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background-color: var(--table-header);
+            color: var(--zero-color);
+            font-family: 'Helvetica', sans-serif;
+            font-size: 0.9rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Análisis Científico de Datos Filogenéticos</h1>
+        <p>Comprendiendo la Matriz Binaria, el Análisis de Grupos Externos y la interpretación de Dendrogramas en biología sistemática.</p>
+    </header>
+
+    <div class="container">
+
+        <!-- Sección 1: Matriz Binaria -->
+        <section id="matriz">
+            <h2>1. La Matriz Binaria</h2>
+            <div class="definition">
+                Una matriz binaria es una tabla de datos donde las entidades se codifican utilizando únicamente dos estados: 0 (ausencia) y 1 (presencia).
+            </div>
+            
+            <p>En biología evolutiva y taxonomía, esta matriz es la base de los análisis cladísticos. Las filas representan a las <strong>Unidades Taxonómicas Operativas (OTUs)</strong> —que pueden ser especies, géneros o poblaciones—, mientras que las columnas representan <strong>caracteres</strong> anatómicos, fisiológicos o genéticos.</p>
+            
+            <p>El estado <span class="zero">0</span> indica que el carácter está ausente en ese taxón, mientras que el <span class="one">1</span> indica que está presente.</p>
+
+            <h3>Ejemplo de Matriz de Caracteres Morfológicos</h3>
+            <div class="table-wrapper">
+                <table>
+                    <tr>
+                        <th>Taxón (OTU)</th>
+                        <th>Presencia de cráneo</th>
+                        <th>Mandíbula articulada</th>
+                        <th>Extremidades tetrapodas</th>
+                        <th>Pelo</th>
+                    </tr>
+                    <tr>
+                        <td class="taxon">Lamprea (Outgroup)</td>
+                        <td class="zero">0</td>
+                        <td class="zero">0</td>
+                        <td class="zero">0</td>
+                        <td class="zero">0</td>
+                    </tr>
+                    <tr>
+                        <td class="taxon">Tiburón</td>
+                        <td class="one">1</td>
+                        <td class="one">1</td>
+                        <td class="zero">0</td>
+                        <td class="zero">0</td>
+                    </tr>
+                    <tr>
+                        <td class="taxon">Rana</td>
+                        <td class="one">1</td>
+                        <td class="one">1</td>
+                        <td class="one">1</td>
+                        <td class="zero">0</td>
+                    </tr>
+                    <tr>
+                        <td class="taxon">Oso</td>
+                        <td class="one">1</td>
+                        <td class="one">1</td>
+                        <td class="one">1</td>
+                        <td class="one">1</td>
+                    </tr>
+                </table>
+            </div>
+            <p>Esta simple estructura de ceros y unos permite a los algoritmos matemáticos calcular el grado de similitud entre las especies para construir árboles evolutivos.</p>
+        </section>
+
+        <!-- Sección 2: Análisis de Grupos Externos -->
+        <section id="externo">
+            <h2>2. Análisis de Grupos Externos (Outgroup)</h2>
+            <div class="definition">
+                El análisis de grupos externos es un método para determinar la "polaridad" de los caracteres: es decir, decidir qué estado es ancestral (plesiomórfico) y cuál es derivado (apomórfico).
+            </div>
+
+            <p>Para lograr esto, se selecciona un <strong>grupo externo (outgroup)</strong>: un taxón que está estrechamente relacionado con los organismos de estudio, pero que no pertenece al grupo interno (<strong>ingroup</strong>) que se está analizando.</p>
+
+            <p>Por convención científica, se asume que el estado del carácter presente en el grupo externo es el estado ancestral (0). Cualquier desviación de este estado en el grupo interno se considera una innovación evolutiva (1).</p>
+
+            <div class="diagram-container">
+                <div class="outgroup-diagram">
+                    <div class="box outgroup">
+                        <strong>Grupo Externo</strong><br>
+                        <span class="scientific-name">Lamprea</span><br>
+                        <small>Estado ancestral (0)</small>
+                    </div>
+                    <div class="arrow">➔</div>
+                    <div class="box ingroup">
+                        <strong>Grupo Interno</strong><br>
+                        <span class="scientific-name">Tiburón, Rana, Oso</span><br>
+                        <small>Estados derivados (1)</small>
+                    </div>
+                </div>
+            </div>
+
+            <p>En el ejemplo de la matriz anterior, al observar que la Lamprea (grupo externo) carece de mandíbula articulada (0), determinamos que la mandíbula es un carácter derivado (1) que evolucionó posteriormente en el grupo interno.</p>
+        </section>
+
+        <!-- Sección 3: Dendrograma -->
+        <section id="dendrograma">
+            <h2>3. El Dendrograma</h2>
+            <div class="definition">
+                Un dendrograma (del griego "dendron", árbol) es un diagrama ramificado que representa las relaciones de similitud o genealógicas entre un conjunto de entidades.
+            </div>
+
+            <p>Una vez procesada la matriz binaria, el resultado se visualiza como un árbol. La longitud de las ramas y los puntos de bifurcación (nodos) indican el grado de diferencia o distancia evolutiva entre los taxones.</p>
+
+            <ul>
+                <li><strong>Raíz:</strong> Representa al ancestro común más reciente de todos los taxones analizados.</li>
+                <li><strong>Nodos:</strong> Son los puntos de ramificación que representan ancestros comunes de los grupos derivados.</li>
+                <li><strong>Hojas (Terminales):</strong> Representan a los taxones actuales (OTUs) de la matriz.</li>
+            </ul>
+
+            <h3>Representación gráfica del dendrograma</h3>
+            
+            <div class="diagram-container">
+                <!-- Dendrograma construido en SVG puro para mantener estilo científico -->
+                <svg class="dendrogram-svg" viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Eje de distancia (simulado) -->
+                    <line x1="50" y1="300" x2="450" y2="300" class="branch" style="stroke: #ccc;"/>
+                    <text x="200" y="320" class="label-text" style="fill: #7f8c8d;">Distancia Evolutiva ➔</text>
+                    
+                    <!-- Eje vertical de taxones -->
+                    <line x1="450" y1="50" x2="450" y2="250" class="branch" />
+                    
+                    <!-- Ramas de los taxones -->
+                    <line x1="450" y1="50" x2="400" y2="50" class="branch" /> <!-- Oso -->
+                    <line x1="450" y1="100" x2="350" y2="100" class="branch" /> <!-- Rana -->
+                    <line x1="450" y1="200" x2="250" y2="200" class="branch" /> <!-- Tiburón -->
+                    <line x1="450" y1="250" x2="100" y2="250" class="branch" /> <!-- Lamprea -->
+
+                    <!-- Conexiones Verticales (Nodos) -->
+                    <!-- Nodo 1: Agrupa Oso y Rana -->
+                    <line x1="400" y1="50" x2="400" y2="100" class="branch" />
+                    <line x1="400" y1="75" x2="350" y2="75" class="branch" /> <!-- Conector hacia atrás -->
+                    <circle cx="400" cy="75" r="4" class="node-circle" />
+                    
+                    <!-- Nodo 2: Agrupa (Oso, Rana) con Tiburón -->
+                    <line x1="350" y1="75" x2="350" y2="200" class="branch" />
+                    <line x1="350" y1="137" x2="250" y2="137" class="branch" /> <!-- Conector hacia atrás -->
+                    <circle cx="350" cy="137" r="4" class="node-circle" />
+
+                    <!-- Nodo 3: Raíz - Agrupa todo con Lamprea -->
+                    <line x1="250" y1="137" x2="250" y2="250" class="branch" />
+                    <circle cx="250" cy="193" r="4" class="node-circle" />
+                    <line x1="250" y1="193" x2="100" y2="193" class="branch" /> <!-- Hacia la raíz -->
+
+                    <!-- Etiquetas de los taxones -->
+                    <text x="460" y="55" class="label-text scientific-name">Oso</text>
+                    <text x="460" y="105" class="label-text scientific-name">Rana</text>
+                    <text x="460" y="205" class="label-text scientific-name">Tiburón</text>
+                    <text x="460" y="255" class="label-text scientific-name">Lamprea</text>
+
+                    <!-- Etiquetas de los nodos -->
+                    <text x="390" y="65" class="label-text" style="font-size: 12px; fill: #1a5276;">Nodo A</text>
+                    <text x="340" y="127" class="label-text" style="font-size: 12px; fill: #1a5276;">Nodo B</text>
+                    <text x="230" y="183" class="label-text" style="font-size: 12px; fill: #1a5276;">Raíz</text>
+                </svg>
+            </div>
+
+            <p>En este dendrograma, basado en nuestra matriz binaria, el Oso y la Rana comparten un ancestro común reciente (Nodo A) debido a que ambos poseen extremidades tetrapodas. El Tiburón se une a ellos en el Nodo B (comparten mandíbula), y finalmente, la Lamprea se separa en la raíz, marcando la mayor distancia evolutiva como nuestro grupo externo.</p>
+        </section>
+
+    </div>
+
+    <footer>
+        Documento Académico de Biología Sistemática &copy; 2024
+    </footer>
+
+</body>
+</html>
