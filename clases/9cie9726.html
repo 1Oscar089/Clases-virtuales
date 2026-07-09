@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Constante de Equilibrio Químico</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --slide-bg: #ffffff;
+            --text-color: #2d3436;
+            --reactant-color: #0984e3; /* Azul para reactivos */
+            --product-color: #00b894;  /* Verde para productos */
+            --accent-color: #6c5ce7;
+            --border-color: #dfe6e9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden; /* Evita scroll, estilo presentación */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Contenedor de la presentación */
+        .presentation-container {
+            width: 90%;
+            max-width: 1000px;
+            height: 75vh;
+            position: relative;
+        }
+
+        /* Diapositivas */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--slide-bg);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.5s ease;
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        h1 { font-size: 2.5rem; margin-bottom: 1rem; color: var(--accent-color); }
+        h2 { font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--text-color); }
+        p { font-size: 1.2rem; max-width: 700px; line-height: 1.6; margin-bottom: 1rem; }
+
+        /* Fórmulas y Subíndices */
+        .formula-box {
+            background: #f1f2f6;
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            font-size: 1.8rem;
+            margin: 1.5rem 0;
+            border-left: 5px solid var(--accent-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            font-family: 'Times New Roman', serif; /* Tipografía matemática */
+        }
+
+        /* Creación de fracción con CSS puro */
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 0.5rem;
+        }
+        .numerator, .denominator {
+            padding: 0 0.5rem;
+        }
+        .denominator {
+            border-top: 2px solid var(--text-color);
+        }
+        
+        sub { font-size: 0.7em; vertical-align: sub; }
+        sup { font-size: 0.7em; vertical-align: super; }
+
+        /* Navegación */
+        .navigation {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .nav-btn:hover { background-color: #5a4bd1; transform: scale(1.05); }
+        .nav-btn:disabled { background-color: #b2bec3; cursor: not-allowed; transform: none; }
+
+        .dots { display: flex; gap: 0.5rem; }
+        .dot { width: 12px; height: 12px; background-color: #b2bec3; border-radius: 50%; cursor: pointer; transition: background 0.3s; }
+        .dot.active { background-color: var(--accent-color); }
+
+        /* --- Estilos Interactivos (Diapositiva 4) --- */
+        .interactive-area {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 200px;
+            margin-top: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .bar-container {
+            width: 15%;
+            min-width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+        }
+
+        .bar {
+            width: 100%;
+            border-radius: 5px 5px 0 0;
+            transition: height 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            color: white;
+            font-weight: bold;
+            padding-bottom: 5px;
+        }
+
+        #barReactantes { background-color: var(--reactant-color); height: 50%; }
+        #barProductos { background-color: var(--product-color); height: 50%; }
+
+        .bar-label { margin-top: 0.5rem; font-weight: bold; }
+
+        .slider-container {
+            width: 80%;
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: #dfe6e9;
+            border-radius: 5px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .interpretation-box {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border: 2px dashed var(--accent-color);
+            border-radius: 8px;
+            font-weight: bold;
+            min-height: 60px;
+            width: 80%;
+        }
+
+        ul { list-style-position: inside; }
+
+    </style>
+</head>
+<body>
+
+    <div class="presentation-container">
+        
+        <!-- Diapositiva 1: Introducción -->
+        <div class="slide active">
+            <h1>Constante de Equilibrio Químico</h1>
+            <p>En una reacción química reversible, el sistema alcanza un estado donde las concentraciones de reactivos y productos permanecen constantes en el tiempo. Esto se llama <strong>Equilibrio Dinámico</strong>.</p>
+            <p>Para cuantificar este estado, utilizamos la <strong>Constante de Equilibrio (K<sub>c</sub>)</strong>.</p>
+        </div>
+
+        <!-- Diapositiva 2: La Fórmula -->
+        <div class="slide">
+            <h2>Definición Matemática</h2>
+            <p>Para una reacción genérica donde 'a' moles de A reaccionan con 'b' moles de B:</p>
+            
+            <div class="formula-box">
+                aA + bB &nbsp;&#8652;&nbsp; cC + dD
+            </div>
+
+            <p>La expresión de la constante de equilibrio se define como:</p>
+            
+            <div class="formula-box">
+                K<sub>c</sub> = 
+                <div class="fraction">
+                    <div class="numerator">[C]<sup>c</sup> [D]<sup>d</sup></div>
+                    <div class="denominator">[A]<sup>a</sup> [B]<sup>b</sup></div>
+                </div>
+            </div>
+            
+            <p style="font-size: 1rem; color: #636e72;">Donde [A], [B], [C] y [D] son las concentraciones molares en el equilibrio.</p>
+        </div>
+
+        <!-- Diapositiva 3: Interpretación Teórica -->
+        <div class="slide">
+            <h2>Interpretación de K<sub>c</sub></h2>
+            <p>El valor de K<sub>c</sub> nos indica hacia dónde se favorece la reacción:</p>
+            <ul style="text-align: left; font-size: 1.2rem; line-height: 2;">
+                <li><strong>K<sub>c</sub> &raquo; 1 (Mayor que 10<sup>3</sup>):</strong> Se favorecen los <span style="color: var(--product-color); font-weight: bold;">Productos</span>. La reacción casi se completa.</li>
+                <li><strong>K<sub>c</sub> &asymp; 1 (Entre 10<sup>-3</sup> y 10<sup>3</sup>):</strong> Hay cantidades significativas de reactivos y productos.</li>
+                <li><strong>K<sub>c</sub> &laquo; 1 (Menor que 10<sup>-3</sup>):</strong> Se favorecen los <span style="color: var(--reactant-color); font-weight: bold;">Reactantes</span>. La reacción casi no ocurre.</li>
+            </ul>
+        </div>
+
+        <!-- Diapositiva 4: Interactiva -->
+        <div class="slide">
+            <h2>Laboratorio Interactivo</h2>
+            <p style="margin-bottom: 0;">Ajusta el valor de K<sub>c</sub> y observa cómo cambian las concentraciones en el equilibrio:</p>
+            
+            <div class="slider-container">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 1rem;">
+                    <span>Reactantes (K pequeño)</span>
+                    <strong>K<sub>c</sub> = <span id="kValue">1</span></strong>
+                    <span>Productos (K grande)</span>
+                </div>
+                <input type="range" id="kSlider" min="0" max="6" step="0.1" value="0">
+            </div>
+
+            <div class="interactive-area">
+                <div class="bar-container">
+                    <div class="bar" id="barReactantes">50%</div>
+                    <div class="bar-label" style="color: var(--reactant-color);">Reactivos</div>
+                </div>
+                <div class="bar-container">
+                    <div class="bar" id="barProductos">50%</div>
+                    <div class="bar-label" style="color: var(--product-color);">Productos</div>
+                </div>
+            </div>
+
+            <div class="interpretation-box" id="interpretationText">
+                K es aproximadamente 1. Hay cantidades significativas de reactivos y productos.
+            </div>
+        </div>
+
+        <!-- Diapositiva 5: Conclusión -->
+        <div class="slide">
+            <h2>Resumen</h2>
+            <p>La constante de equilibrio es una herramienta fundamental en termodinámica y química industrial.</p>
+            <p>Nos permite predecir si una reacción será útil para sintetizar un producto en particular antes siquiera de realizar el experimento en el laboratorio.</p>
+            <div class="formula-box" style="border-left: none; border-top: 2px solid var(--accent-color); border-bottom: 2px solid var(--accent-color); background: transparent;">
+                ¡Equilibrio = Estabilidad!
+            </div>
+        </div>
+    </div>
+
+    <!-- Controles de Navegación -->
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn">← Anterior</button>
+        <div class="dots" id="dotsContainer"></div>
+        <button class="nav-btn" id="nextBtn">Siguiente →</button>
+    </div>
+
+    <script>
+        // Lógica de la Presentación (Sliders)
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dotsContainer');
+        let currentSlide = 0;
+
+        // Crear puntos de navegación
+        slides.forEach((slide, index) => {
+            const dot = document.createElement('div');
+            dot.classList.add('dot');
+            if (index === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => goToSlide(index));
+            dotsContainer.appendChild(dot);
+        });
+
+        function updateDots() {
+            document.querySelectorAll('.dot').forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+        }
+
+        function goToSlide(index) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = index;
+            slides[currentSlide].classList.add('active');
+            updateDots();
+            updateButtons();
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) goToSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) goToSlide(currentSlide - 1);
+        }
+
+        function updateButtons() {
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+
+        nextBtn.addEventListener('click', nextSlide);
+        prevBtn.addEventListener('click', prevSlide);
+
+        // Navegación con teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        updateButtons();
+
+        // Lógica Interactiva del Equilibrio Químico
+        const slider = document.getElementById('kSlider');
+        const kValueDisplay = document.getElementById('kValue');
+        const barReactantes = document.getElementById('barReactantes');
+        const barProductos = document.getElementById('barProductos');
+        const interpretationText = document.getElementById('interpretationText');
+
+        slider.addEventListener('input', () => {
+            // El slider va de 0 a 6. Lo convertimos a K = 10^valor (Logarítmico)
+            // 0 -> 10^0 = 1, 3 -> 10^3 = 1000, 6 -> 10^6
+            const logK = parseFloat(slider.value);
+            const K = Math.pow(10, logK);
+            
+            // Formatear K para mostrarlo bonito
+            if (K >= 1000) {
+                // Usar formato exponencial manual para evitar problemas de renderizado
+                const exp = Math.floor(logK);
+                const base = (K / Math.pow(10, exp)).toFixed(1);
+                kValueDisplay.innerHTML = `${base} x 10<sup>${exp}</sup>`;
+            } else {
+                kValueDisplay.innerText = K.toFixed(1);
+            }
+
+            // Calcular porcentajes (Asumiendo estequiometría 1:1 simplificada)
+            const total = 100;
+            const porcentajeProductos = (total * K) / (K + 1);
+            const porcentajeReactantes = total - porcentajeProductos;
+
+            // Actualizar barras
+            barReactantes.style.height = porcentajeReactantes + '%';
+            barProductos.style.height = porcentajeProductos + '%';
+            barReactantes.innerText = Math.round(porcentajeReactantes) + '%';
+            barProductos.innerText = Math.round(porcentajeProductos) + '%';
+
+            // Actualizar texto de interpretación usando HTML para subíndices
+            if (K > 1000) {
+                interpretationText.innerHTML = `K<sub>c</sub> es muy grande. La reacción favorece fuertemente a los <strong>PRODUCTOS</strong>.`;
+                interpretationText.style.color = 'var(--product-color)';
+            } else if (K < 0.001) {
+                interpretationText.innerHTML = `K<sub>c</sub> es muy pequeño. La reacción favorece fuertemente a los <strong>REACTIVOS</strong>.`;
+                interpretationText.style.color = 'var(--reactant-color)';
+            } else {
+                interpretationText.innerHTML = `K<sub>c</sub> es aproximadamente 1. Hay cantidades significativas de ambos.`;
+                interpretationText.style.color = 'var(--text-color)';
+            }
+        });
+
+    </script>
+</body>
+</html>
